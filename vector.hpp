@@ -21,11 +21,18 @@ namespace ft {
 		typedef std::ptrdiff_t						difference_type;
 		typedef std::size_t							size_type;
 
-		class iterator;
-		class const_iterator;
+		template<bool IsConst>
+		class common_iterator;
+		typedef vector::common_iterator<NotConst>           iterator;
+		typedef vector::common_iterator<Const>              const_iterator;
+		typedef ft::reverse_iterator<iterator>          	reverse_iterator;
+		typedef ft::reverse_iterator<const_iterator>     	const_reverse_iterator;
 
-		typedef ft::reverse_iterator<iterator> reverse_iterator;
-		typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
+
+//		class const_iterator;
+//
+//		typedef ft::reverse_iterator<iterator> reverse_iterator;
+//		typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
 
 		vector();
 		explicit vector(const Allocator &alloc);
@@ -252,7 +259,6 @@ namespace ft {
 			return;
 		}
 		T* tmp = __alloc.allocate(n);
-//		std::cout << "here" << std::endl;
 		size_type i;
 		try{
 			for(i = 0; first != last; ++first, ++i)
@@ -474,24 +480,23 @@ namespace ft {
 
 	template<class T, class Allocator>
 	typename vector<T, Allocator>::size_type	vector<T, Allocator>::max_size() const {
-		size_type nlmax = (size_type) std::numeric_limits<difference_type>::max();
-		size_type nlmax2 = std::numeric_limits<size_type>::max() / sizeof(value_type);
-		size_type res = ft::min((size_type) std::numeric_limits<difference_type>::max(),
-								std::numeric_limits<size_type>::max() / sizeof(value_type));
 		return (allocator_type().max_size());
 	}
 
+
+
 	template<class T, class Allocator>
-	class vector<T, Allocator>::iterator : public ft::iterator<ft::random_access_iterator_tag, T, std::ptrdiff_t, T*, T&>{
+	template<bool IsConst>
+	class vector<T, Allocator>::common_iterator : public ft::iterator<ft::random_access_iterator_tag, typename conditional<IsConst, value_type, const value_type>::type> {
 	private:
 		T* __ptr;
 	public:
 		typedef T* iterator_type;
-		iterator() {};
-		iterator(T* ptr) : __ptr(ptr) {};
-		iterator(const iterator& other) : __ptr(other.__ptr) {};
+		common_iterator() {};
+		common_iterator(T* ptr) : __ptr(ptr) {};
+		common_iterator(const common_iterator& other) : __ptr(other.__ptr) {};
 		T* base() const {return __ptr;}
-		iterator& operator=(const iterator& other) {
+		common_iterator& operator=(const common_iterator& other) {
 			__ptr = other.__ptr;
 			return *this;
 		}
@@ -501,135 +506,209 @@ namespace ft {
 		T* operator->() {
 			return __ptr;
 		}
-		iterator& operator++() {
+		common_iterator& operator++() {
 			__ptr++;
 			return *this;
 		}
-		iterator operator++(int) {
-			iterator tmp(*this);
+		common_iterator operator++(int) {
+			common_iterator tmp(*this);
 			++(*this);
 			return tmp;
 		}
-		iterator& operator--(){
+		common_iterator& operator--(){
 			__ptr--;
 			return *this;
 		}
-		iterator operator--(int) {
-			iterator tmp(*this);
+		common_iterator operator--(int) {
+			common_iterator tmp(*this);
 			--(*this);
 			return tmp;
 		}
-		iterator&	operator+=(difference_type n) {
+		common_iterator&	operator+=(difference_type n) {
 			__ptr += n;
 			return *this;
 		}
-		iterator&	operator-=(difference_type n) {
+		common_iterator&	operator-=(difference_type n) {
 			__ptr -= n;
 			return *this;
 		}
-		iterator	operator+(difference_type n) {
-			iterator tmp(*this);
+		common_iterator	operator+(difference_type n) {
+			common_iterator tmp(*this);
 			tmp += n;
 			return tmp;
 		}
-		iterator	operator-(difference_type n) const {
-			iterator tmp(*this);
+		common_iterator	operator-(difference_type n) const {
+			common_iterator tmp(*this);
 			tmp -= n;
 			return tmp;
 		}
 		T&	operator[](difference_type n) {
 			return *(__ptr + n);
 		}
-		operator	vector<T, Allocator>::const_iterator() const {return vector<T, Allocator>::const_iterator(__ptr);}
+//		operator	vector<T, Allocator>::const_iterator() const {return vector<T, Allocator>::const_iterator(__ptr);}
 
-		friend difference_type	operator-(iterator left, iterator right){return (left.base() - right.base());}
-		friend bool	operator==(iterator left, iterator right) {return (left.base() == right.base());}
-		friend bool operator<=(iterator left, iterator right) {return (left.base() <= right.base());}
-		friend bool operator>=(iterator left, iterator right) {return (left.base() >= right.base());}
-		friend bool operator!=(iterator left, iterator right) {return (left.base() != right.base());}
-		friend bool operator<(iterator left, iterator right) {return (left.base() < right.base());}
-		friend bool operator>(iterator left, iterator right) {return (left.base() > right.base());}
-		friend iterator operator+(difference_type n, iterator iter) {return iter + n;}
-		friend iterator operator-(difference_type n, iterator iter) {return iter - n;}
+		friend difference_type	operator-(common_iterator left, common_iterator right){return (left.base() - right.base());}
+		friend bool	operator==(common_iterator left, common_iterator right) {return (left.base() == right.base());}
+		friend bool operator<=(common_iterator left, common_iterator right) {return (left.base() <= right.base());}
+		friend bool operator>=(common_iterator left, common_iterator right) {return (left.base() >= right.base());}
+		friend bool operator!=(common_iterator left, common_iterator right) {return (left.base() != right.base());}
+		friend bool operator<(common_iterator left, common_iterator right) {return (left.base() < right.base());}
+		friend bool operator>(common_iterator left, common_iterator right) {return (left.base() > right.base());}
+		friend common_iterator operator+(difference_type n, common_iterator iter) {return iter + n;}
+		friend common_iterator operator-(difference_type n, common_iterator iter) {return iter - n;}
 	};
 
 
-	template <class T, class Allocator>
-	class vector<T, Allocator>::const_iterator: public ft::iterator<ft::random_access_iterator_tag, T, std::ptrdiff_t, const T*, const T&>{
-	private:
-		const T *__ptr;
-	public:
-		typedef const T *iterator_type;
-		const_iterator() {};
-		const_iterator(const T *ptr) : __ptr(ptr) {};
-		const_iterator(const const_iterator &other) : __ptr(other.__ptr) {};
-		const T *base() const { return __ptr; }
-		const_iterator &operator=(const const_iterator &other) {
-			__ptr = other.__ptr;
-			return *this;
-		}
+//	template<class T, class Allocator>
+//	class vector<T, Allocator>::iterator : public ft::iterator<ft::random_access_iterator_tag, T, std::ptrdiff_t, T*, T&>{
+//	private:
+//		T* __ptr;
+//	public:
+//		typedef T* iterator_type;
+//		iterator() {};
+//		iterator(T* ptr) : __ptr(ptr) {};
+//		iterator(const iterator& other) : __ptr(other.__ptr) {};
+//		T* base() const {return __ptr;}
+//		iterator& operator=(const iterator& other) {
+//			__ptr = other.__ptr;
+//			return *this;
+//		}
+//		T& operator*() {
+//			return *__ptr;
+//		}
+//		T* operator->() {
+//			return __ptr;
+//		}
+//		iterator& operator++() {
+//			__ptr++;
+//			return *this;
+//		}
+//		iterator operator++(int) {
+//			iterator tmp(*this);
+//			++(*this);
+//			return tmp;
+//		}
+//		iterator& operator--(){
+//			__ptr--;
+//			return *this;
+//		}
+//		iterator operator--(int) {
+//			iterator tmp(*this);
+//			--(*this);
+//			return tmp;
+//		}
+//		iterator&	operator+=(difference_type n) {
+//			__ptr += n;
+//			return *this;
+//		}
+//		iterator&	operator-=(difference_type n) {
+//			__ptr -= n;
+//			return *this;
+//		}
+//		iterator	operator+(difference_type n) {
+//			iterator tmp(*this);
+//			tmp += n;
+//			return tmp;
+//		}
+//		iterator	operator-(difference_type n) const {
+//			iterator tmp(*this);
+//			tmp -= n;
+//			return tmp;
+//		}
+//		T&	operator[](difference_type n) {
+//			return *(__ptr + n);
+//		}
+//		operator	vector<T, Allocator>::const_iterator() const {return vector<T, Allocator>::const_iterator(__ptr);}
+//
+//		friend difference_type	operator-(iterator left, iterator right){return (left.base() - right.base());}
+//		friend bool	operator==(iterator left, iterator right) {return (left.base() == right.base());}
+//		friend bool operator<=(iterator left, iterator right) {return (left.base() <= right.base());}
+//		friend bool operator>=(iterator left, iterator right) {return (left.base() >= right.base());}
+//		friend bool operator!=(iterator left, iterator right) {return (left.base() != right.base());}
+//		friend bool operator<(iterator left, iterator right) {return (left.base() < right.base());}
+//		friend bool operator>(iterator left, iterator right) {return (left.base() > right.base());}
+//		friend iterator operator+(difference_type n, iterator iter) {return iter + n;}
+//		friend iterator operator-(difference_type n, iterator iter) {return iter - n;}
+//	};
+//
 
-		const T &operator*() const { return *__ptr; }
+//	template <class T, class Allocator>
+//	class vector<T, Allocator>::const_iterator: public ft::iterator<ft::random_access_iterator_tag, T, std::ptrdiff_t, const T*, const T&>{
+//	private:
+//		const T *__ptr;
+//	public:
+//		typedef const T *iterator_type;
+//		const_iterator() {};
+//		const_iterator(const T *ptr) : __ptr(ptr) {};
+//		const_iterator(const const_iterator &other) : __ptr(other.__ptr) {};
+//		const T *base() const { return __ptr; }
+//		const_iterator &operator=(const const_iterator &other) {
+//			__ptr = other.__ptr;
+//			return *this;
+//		}
+//
+//		const T &operator*() const { return *__ptr; }
+//
+//		const T *operator->() const { return __ptr; }
+//
+//		const_iterator &operator++() {
+//			__ptr++;
+//			return *this;
+//		}
+//
+//		const_iterator operator++(int) {
+//			const_iterator tmp(*this);
+//			++(*this);
+//			return tmp;
+//		}
+//
+//		const_iterator &operator--() {
+//			__ptr--;
+//			return *this;
+//		}
+//
+//		const_iterator operator--(int) {
+//			const_iterator tmp(*this);
+//			--(*this);
+//			return tmp;
+//		}
+//
+//		const_iterator &operator+=(difference_type n) {
+//			__ptr += n;
+//			return *this;
+//		}
+//
+//		const_iterator &operator-=(difference_type n) {
+//			__ptr -= n;
+//			return *this;
+//		}
+//
+//		const_iterator operator+(difference_type n) {
+//			const_iterator tmp(*this);
+//			tmp += n;
+//			return tmp;
+//		}
+//
+//		const_iterator operator-(difference_type n) {
+//			const_iterator tmp(*this);
+//			tmp -= n;
+//			return tmp;
+//		}
+//
+//		const T &operator[](difference_type n) { return *(__ptr + n); }
+////		operator	vector<T, Allocator>::iterator() const {return vector<T, Allocator>::iterator(__ptr);}
+//
+//		friend difference_type operator-(const_iterator left, const_iterator right) {return left.base() - right.base();}
+//		friend bool operator==(const_iterator left, const_iterator right) { return left.base() == right.base(); }
+//		friend bool operator<=(const_iterator left, const_iterator right) { return left.base() <= right.base(); }
+//		friend bool operator>=(const_iterator left, const_iterator right) { return left.base() >= right.base(); }
+//		friend bool operator!=(const_iterator left, const_iterator right) { return left.base() != right.base(); }
+//		friend bool operator<(const_iterator left, const_iterator right) { return left.base() < right.base(); }
+//		friend bool operator>(const_iterator left, const_iterator right) { return left.base() > right.base(); }
+//		friend const_iterator operator+(difference_type n, const_iterator iter) {return iter + n;}
+//		friend const_iterator operator-(difference_type n, const_iterator iter) {return iter - n;}
+//	};
 
-		const T *operator->() const { return __ptr; }
-
-		const_iterator &operator++() {
-			__ptr++;
-			return *this;
-		}
-
-		const_iterator operator++(int) {
-			const_iterator tmp(*this);
-			++(*this);
-			return tmp;
-		}
-
-		const_iterator &operator--() {
-			__ptr--;
-			return *this;
-		}
-
-		const_iterator operator--(int) {
-			const_iterator tmp(*this);
-			--(*this);
-			return tmp;
-		}
-
-		const_iterator &operator+=(difference_type n) {
-			__ptr += n;
-			return *this;
-		}
-
-		const_iterator &operator-=(difference_type n) {
-			__ptr -= n;
-			return *this;
-		}
-
-		const_iterator operator+(difference_type n) {
-			const_iterator tmp(*this);
-			tmp += n;
-			return tmp;
-		}
-
-		const_iterator operator-(difference_type n) {
-			const_iterator tmp(*this);
-			tmp -= n;
-			return tmp;
-		}
-
-		const T &operator[](difference_type n) { return *(__ptr + n); }
-//		operator	vector<T, Allocator>::iterator() const {return vector<T, Allocator>::iterator(__ptr);}
-
-		friend difference_type operator-(const_iterator left, const_iterator right) {return left.base() - right.base();}
-		friend bool operator==(const_iterator left, const_iterator right) { return left.base() == right.base(); }
-		friend bool operator<=(const_iterator left, const_iterator right) { return left.base() <= right.base(); }
-		friend bool operator>=(const_iterator left, const_iterator right) { return left.base() >= right.base(); }
-		friend bool operator!=(const_iterator left, const_iterator right) { return left.base() != right.base(); }
-		friend bool operator<(const_iterator left, const_iterator right) { return left.base() < right.base(); }
-		friend bool operator>(const_iterator left, const_iterator right) { return left.base() > right.base(); }
-		friend const_iterator operator+(difference_type n, const_iterator iter) {return iter + n;}
-		friend const_iterator operator-(difference_type n, const_iterator iter) {return iter - n;}
-	};
 
 	template<class T, class Allocator>
 	typename vector<T, Allocator>::iterator vector<T, Allocator>::begin() {return __data;}
