@@ -46,7 +46,7 @@ namespace ft {
 		vector &operator=(const vector &other);
 		void assign(size_type count, const T &value);
 		template<class InputIt>
-		void assign(typename enable_if<is_iterator<InputIt>::value, InputIt>::type first, InputIt last); //why is iter?
+		void assign(typename enable_if<is_iterator<InputIt>::value, InputIt>::type first, InputIt last);
 		allocator_type get_allocator() const;
 		reference at(size_type pos);
 		const_reference at(size_type pos) const;
@@ -488,22 +488,34 @@ namespace ft {
 	template<class T, class Allocator>
 	template<bool IsConst>
 	class vector<T, Allocator>::common_iterator : public ft::iterator<ft::random_access_iterator_tag, typename conditional<IsConst, value_type, const value_type>::type> {
+//		typedef typename common_iterator::iterator_base::difference_type            diff_type;
+//		typedef typename conditional_t<IsConst, difference_type, const difference_type>::type   diff_t;
+//		typedef typename conditional_t<IsConst, value_type, const value_type>::type value_t;
+		typedef typename conditional_t<IsConst, T&, const T&>::type ref_t;
+		typedef typename conditional_t<IsConst, T*, const T*>::type point_t;
+		typedef	typename conditional_t<IsConst, iterator, const_iterator>::type     iter_t;
+//		typedef iter_t  iterator_type;
 	private:
-		T* __ptr;
+//		typedef T* iterator_type;
+		point_t __ptr;
 	public:
-		typedef T* iterator_type;
 		common_iterator() {};
-		common_iterator(T* ptr) : __ptr(ptr) {};
-		common_iterator(const common_iterator& other) : __ptr(other.__ptr) {};
-		T* base() const {return __ptr;}
+		common_iterator(point_t ptr) : __ptr(ptr) {};
+		common_iterator(const iterator &other) : __ptr(other.base()) {};
+
+		point_t base() const {return __ptr;}
 		common_iterator& operator=(const common_iterator& other) {
 			__ptr = other.__ptr;
 			return *this;
 		}
-		T& operator*() {
+//		template<bool IsConst2>
+		ref_t operator*() {
 			return *__ptr;
 		}
-		T* operator->() {
+//		T& operator*() {
+//			return *__ptr;
+//		}
+		point_t operator->() {
 			return __ptr;
 		}
 		common_iterator& operator++() {
@@ -542,185 +554,40 @@ namespace ft {
 			tmp -= n;
 			return tmp;
 		}
-		T&	operator[](difference_type n) {
+		ref_t	operator[](difference_type n) {
 			return *(__ptr + n);
 		}
 //		operator	vector<T, Allocator>::const_iterator() const {return vector<T, Allocator>::const_iterator(__ptr);}
-
-		friend difference_type	operator-(common_iterator left, common_iterator right){return (left.base() - right.base());}
-		friend bool	operator==(common_iterator left, common_iterator right) {return (left.base() == right.base());}
-		friend bool operator<=(common_iterator left, common_iterator right) {return (left.base() <= right.base());}
-		friend bool operator>=(common_iterator left, common_iterator right) {return (left.base() >= right.base());}
-		friend bool operator!=(common_iterator left, common_iterator right) {return (left.base() != right.base());}
-		friend bool operator<(common_iterator left, common_iterator right) {return (left.base() < right.base());}
-		friend bool operator>(common_iterator left, common_iterator right) {return (left.base() > right.base());}
+		template<bool IsConst2>
+		friend difference_type	operator-(common_iterator left, common_iterator<IsConst2> right){return (left.base() - right.base());}
+		template<bool IsConst2>
+		friend bool	operator==(common_iterator left, common_iterator<IsConst2> right) {return (left.base() == right.base());}
+		template<bool IsConst2>
+		friend bool operator<=(common_iterator left, common_iterator<IsConst2> right) {return (left.base() <= right.base());}
+		template<bool IsConst2>
+		friend bool operator>=(common_iterator left, common_iterator<IsConst2> right) {return (left.base() >= right.base());}
+		template<bool IsConst2>
+		friend bool operator!=(common_iterator left, common_iterator<IsConst2> right) {return (left.base() != right.base());}
+		template<bool IsConst2>
+		friend bool operator<(common_iterator left, common_iterator<IsConst2> right) {return (left.base() < right.base());}
+		template<bool IsConst2>
+		friend bool operator>(common_iterator left, common_iterator<IsConst2> right) {return (left.base() > right.base());}
 		friend common_iterator operator+(difference_type n, common_iterator iter) {return iter + n;}
 		friend common_iterator operator-(difference_type n, common_iterator iter) {return iter - n;}
 	};
 
 
-//	template<class T, class Allocator>
-//	class vector<T, Allocator>::iterator : public ft::iterator<ft::random_access_iterator_tag, T, std::ptrdiff_t, T*, T&>{
-//	private:
-//		T* __ptr;
-//	public:
-//		typedef T* iterator_type;
-//		iterator() {};
-//		iterator(T* ptr) : __ptr(ptr) {};
-//		iterator(const iterator& other) : __ptr(other.__ptr) {};
-//		T* base() const {return __ptr;}
-//		iterator& operator=(const iterator& other) {
-//			__ptr = other.__ptr;
-//			return *this;
-//		}
-//		T& operator*() {
-//			return *__ptr;
-//		}
-//		T* operator->() {
-//			return __ptr;
-//		}
-//		iterator& operator++() {
-//			__ptr++;
-//			return *this;
-//		}
-//		iterator operator++(int) {
-//			iterator tmp(*this);
-//			++(*this);
-//			return tmp;
-//		}
-//		iterator& operator--(){
-//			__ptr--;
-//			return *this;
-//		}
-//		iterator operator--(int) {
-//			iterator tmp(*this);
-//			--(*this);
-//			return tmp;
-//		}
-//		iterator&	operator+=(difference_type n) {
-//			__ptr += n;
-//			return *this;
-//		}
-//		iterator&	operator-=(difference_type n) {
-//			__ptr -= n;
-//			return *this;
-//		}
-//		iterator	operator+(difference_type n) {
-//			iterator tmp(*this);
-//			tmp += n;
-//			return tmp;
-//		}
-//		iterator	operator-(difference_type n) const {
-//			iterator tmp(*this);
-//			tmp -= n;
-//			return tmp;
-//		}
-//		T&	operator[](difference_type n) {
-//			return *(__ptr + n);
-//		}
-//		operator	vector<T, Allocator>::const_iterator() const {return vector<T, Allocator>::const_iterator(__ptr);}
-//
-//		friend difference_type	operator-(iterator left, iterator right){return (left.base() - right.base());}
-//		friend bool	operator==(iterator left, iterator right) {return (left.base() == right.base());}
-//		friend bool operator<=(iterator left, iterator right) {return (left.base() <= right.base());}
-//		friend bool operator>=(iterator left, iterator right) {return (left.base() >= right.base());}
-//		friend bool operator!=(iterator left, iterator right) {return (left.base() != right.base());}
-//		friend bool operator<(iterator left, iterator right) {return (left.base() < right.base());}
-//		friend bool operator>(iterator left, iterator right) {return (left.base() > right.base());}
-//		friend iterator operator+(difference_type n, iterator iter) {return iter + n;}
-//		friend iterator operator-(difference_type n, iterator iter) {return iter - n;}
-//	};
-//
-
-//	template <class T, class Allocator>
-//	class vector<T, Allocator>::const_iterator: public ft::iterator<ft::random_access_iterator_tag, T, std::ptrdiff_t, const T*, const T&>{
-//	private:
-//		const T *__ptr;
-//	public:
-//		typedef const T *iterator_type;
-//		const_iterator() {};
-//		const_iterator(const T *ptr) : __ptr(ptr) {};
-//		const_iterator(const const_iterator &other) : __ptr(other.__ptr) {};
-//		const T *base() const { return __ptr; }
-//		const_iterator &operator=(const const_iterator &other) {
-//			__ptr = other.__ptr;
-//			return *this;
-//		}
-//
-//		const T &operator*() const { return *__ptr; }
-//
-//		const T *operator->() const { return __ptr; }
-//
-//		const_iterator &operator++() {
-//			__ptr++;
-//			return *this;
-//		}
-//
-//		const_iterator operator++(int) {
-//			const_iterator tmp(*this);
-//			++(*this);
-//			return tmp;
-//		}
-//
-//		const_iterator &operator--() {
-//			__ptr--;
-//			return *this;
-//		}
-//
-//		const_iterator operator--(int) {
-//			const_iterator tmp(*this);
-//			--(*this);
-//			return tmp;
-//		}
-//
-//		const_iterator &operator+=(difference_type n) {
-//			__ptr += n;
-//			return *this;
-//		}
-//
-//		const_iterator &operator-=(difference_type n) {
-//			__ptr -= n;
-//			return *this;
-//		}
-//
-//		const_iterator operator+(difference_type n) {
-//			const_iterator tmp(*this);
-//			tmp += n;
-//			return tmp;
-//		}
-//
-//		const_iterator operator-(difference_type n) {
-//			const_iterator tmp(*this);
-//			tmp -= n;
-//			return tmp;
-//		}
-//
-//		const T &operator[](difference_type n) { return *(__ptr + n); }
-////		operator	vector<T, Allocator>::iterator() const {return vector<T, Allocator>::iterator(__ptr);}
-//
-//		friend difference_type operator-(const_iterator left, const_iterator right) {return left.base() - right.base();}
-//		friend bool operator==(const_iterator left, const_iterator right) { return left.base() == right.base(); }
-//		friend bool operator<=(const_iterator left, const_iterator right) { return left.base() <= right.base(); }
-//		friend bool operator>=(const_iterator left, const_iterator right) { return left.base() >= right.base(); }
-//		friend bool operator!=(const_iterator left, const_iterator right) { return left.base() != right.base(); }
-//		friend bool operator<(const_iterator left, const_iterator right) { return left.base() < right.base(); }
-//		friend bool operator>(const_iterator left, const_iterator right) { return left.base() > right.base(); }
-//		friend const_iterator operator+(difference_type n, const_iterator iter) {return iter + n;}
-//		friend const_iterator operator-(difference_type n, const_iterator iter) {return iter - n;}
-//	};
-
+	template<class T, class Allocator>
+	typename vector<T, Allocator>::iterator vector<T, Allocator>::begin() {return iterator(__data);}
 
 	template<class T, class Allocator>
-	typename vector<T, Allocator>::iterator vector<T, Allocator>::begin() {return __data;}
+	typename vector<T, Allocator>::iterator vector<T, Allocator>::end() {return iterator(__data + __size);}
 
 	template<class T, class Allocator>
-	typename vector<T, Allocator>::iterator vector<T, Allocator>::end() {return __data + __size;}
+	typename vector<T, Allocator>::const_iterator vector<T, Allocator>::begin() const {return const_iterator(__data);}
 
 	template<class T, class Allocator>
-	typename vector<T, Allocator>::const_iterator vector<T, Allocator>::begin() const {return __data;}
-
-	template<class T, class Allocator>
-	typename vector<T, Allocator>::const_iterator vector<T, Allocator>::end() const {return __data + __size;}
+	typename vector<T, Allocator>::const_iterator vector<T, Allocator>::end() const {return const_iterator(__data + __size);}
 
 	template<class T, class Allocator>
 	typename vector<T, Allocator>::reverse_iterator vector<T, Allocator>::rbegin() {
